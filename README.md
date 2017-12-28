@@ -66,3 +66,7 @@ Keys with no parameters:
 - -noreplace - Optional. Skip the replacement of repository specific values in files.
 - -help - Print help and exit.
 - -version - Print version and exit.
+
+### Sample
+
+    java -jar C:\informatica-export.jar -r REP_TEST -h localhost -o 6005 -n MyUser -x MyPassword -q FolderAllObjects -dfile C:\Informatica\10.1.0\domains.infa -odir "C:\informatica-export" -cdir "C:\Informatica\10.1.0_client\clients\PowerCenterClient\client\bin"
