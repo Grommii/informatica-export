@@ -61,7 +61,7 @@ The list of replaced values:
 - <domain_file_path> - Required. Full path to domains.infa file.
 - <log_file_path> - Optional. Log directory. Default is the same as output directory.
 
-Keys with no parameters:
+Keys without parameters:
 
 - -noreplace - Optional. Skip the replacement of repository specific values in files.
 - -help - Print help and exit.
