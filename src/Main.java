@@ -7,13 +7,14 @@ import java.util.List;
 
 public class Main {
 
+    private static final String PMREP_COMMAND = "pmrep";
+    private static final String PMREP_CONNECT_COMMAND = "connect";
+    private static final String PMREP_EXECUTEQUERY_COMMAND = "executequery";
+    private static final String PMREP_OBJECTEXPORT_COMMAND = "objectexport";
+    private static final String INFORMATICA_EXPORT_LOG_DEFAULT_FILENAME = "informatica-export.log";
+
     private static String commandsDirectory;
     private static String outputDirectory;
-
-    private static String pmrepCommand = "pmrep";
-    private static String pmrepConnectCommand = "connect";
-    private static String pmrepExecutequeryCommand = "executequery";
-    private static String pmrepObjectexportCommand = "objectexport";
 
     private static String repositoryName;
     private static String repositoryDomainName;
@@ -101,7 +102,7 @@ public class Main {
                 if (replaceValues) {
                     replaceValues(objectFile);
                 }
-                writeToConsole("Exporting object " + currentObjectNumber + ": " + objectFolder + ", " + objectType + ", " + objectSubType + ", " + objectName + ". " + (returnCodeObjectExport == 0 ? "SUCCESS" : "FAILED"));
+                writeToConsole((returnCodeObjectExport == 0 ? "SUCCESS" : "FAILED") + ". " + "Exported object " + currentObjectNumber + ": " + objectFolder + ", " + objectType + ", " + objectSubType + ", " + objectName + ". ");
                 currentObjectNumber++;
 
             }
@@ -113,8 +114,8 @@ public class Main {
 
     private static List<String> getObjectExportCommand(String objectFolder, String objectName, String objectType, String objectSubType, String objectFile) {
         List<String> objectExportCommand = new ArrayList<>();
-        objectExportCommand.add(pmrepCommand);
-        objectExportCommand.add(pmrepObjectexportCommand);
+        objectExportCommand.add(PMREP_COMMAND);
+        objectExportCommand.add(PMREP_OBJECTEXPORT_COMMAND);
         objectExportCommand.add("-n");
         objectExportCommand.add(objectName);
         objectExportCommand.add("-o");
@@ -131,8 +132,8 @@ public class Main {
 
     private static List<String> getExecutequeryCommand() {
         List<String> executequeryCommand = new ArrayList<>();
-        executequeryCommand.add(pmrepCommand);
-        executequeryCommand.add(pmrepExecutequeryCommand);
+        executequeryCommand.add(PMREP_COMMAND);
+        executequeryCommand.add(PMREP_EXECUTEQUERY_COMMAND);
         executequeryCommand.add("-q");
         executequeryCommand.add(repositoryQueryName);
         executequeryCommand.add("-u");
@@ -142,8 +143,8 @@ public class Main {
 
     private static List<String> getConnectCommand() {
         List<String> connectCommand = new ArrayList<>();
-        connectCommand.add(pmrepCommand);
-        connectCommand.add(pmrepConnectCommand);
+        connectCommand.add(PMREP_COMMAND);
+        connectCommand.add(PMREP_CONNECT_COMMAND);
         connectCommand.add("-r");
         connectCommand.add(repositoryName);
         if (repositoryDomainName != null){
@@ -186,13 +187,13 @@ public class Main {
     private static int runCommand(List<String> command) throws IOException, InterruptedException{
         command.set(0,commandsDirectory + File.separator + command.get(0));
         ProcessBuilder processBuilder = new ProcessBuilder(command);
-        if (command.get(1).equals(pmrepConnectCommand)){
+        if (command.get(1).equals(PMREP_CONNECT_COMMAND)){
             processBuilder.environment().put("INFA_DOMAINS_FILE",repositoryDomainFilePath);
         }
         logfileWriter.write("Executing command:");
         logfileWriter.newLine();
         for (int i = 0; i < command.size(); i++) {
-            if (!(command.get(1).equals("connect") && i > 1)){
+            if (!(command.get(1).equals(PMREP_CONNECT_COMMAND) && i > 1)){
                 logfileWriter.write(command.get(i) + " ");
             }
         }
@@ -274,7 +275,7 @@ public class Main {
         }
 
         if (logFile == null){
-            logFile = outputDirectory + File.separator + "informatica-export.log";
+            logFile = outputDirectory + File.separator + INFORMATICA_EXPORT_LOG_DEFAULT_FILENAME;
         }
 
     }
