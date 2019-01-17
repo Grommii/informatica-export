@@ -37,6 +37,53 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
+        class InformaticaObject {
+            private String folder;
+            private String name;
+            private String type;
+            private String subType;
+            private String directory;
+            private String file;
+
+            private InformaticaObject(String folder, String name, String type, String subType) {
+                this.folder = folder;
+                this.name = name;
+                this.type = type;
+                this.subType = subType;
+
+                // Fixing default type/subtype values for correct export
+                if (this.type.equals("transformation") && this.subType.equals("mapplet")) {
+                    this.type = "mapplet";
+                    this.subType = "none";
+                }
+
+                this.directory = outputDirectory + File.separator + this.folder + File.separator + this.type;
+                if (!this.subType.equals("none")) {
+                    this.directory += File.separator + this.subType;
+                }
+
+                this.file = this.directory + File.separator + this.name + ".xml";
+            }
+
+            private List<String> getObjectExportCommand() {
+                List<String> objectExportCommand = new ArrayList<>();
+                objectExportCommand.add(PMREP_COMMAND);
+                objectExportCommand.add(PMREP_OBJECTEXPORT_COMMAND);
+                objectExportCommand.add("-n");
+                objectExportCommand.add(name);
+                objectExportCommand.add("-o");
+                objectExportCommand.add(type);
+                objectExportCommand.add("-t");
+                objectExportCommand.add(subType);
+                objectExportCommand.add("-f");
+                objectExportCommand.add(folder);
+                objectExportCommand.add("-b");
+                objectExportCommand.add("-u");
+                objectExportCommand.add(file);
+                return objectExportCommand;
+            }
+        }
+
         collectArgs(args);
         if (printHelp){
             printHelp();
@@ -78,31 +125,19 @@ public class Main {
             int currentObjectNumber = 1;
             while (reader.ready()) {
                 String[] array = reader.readLine().split(",");
-                String objectFolder = array[1];
-                String objectName = array[2];
-                String objectType = array[3];
-                String objectSubType = array[4];
+                InformaticaObject informaticaObject = new InformaticaObject(array[1], array[2], array[3], array[4]);
 
-                // Fixing default type/subtype values for correct export
-                if (objectType.equals("transformation") && objectSubType.equals("mapplet")) {
-                    objectType = "mapplet";
-                    objectSubType = "none";
-                }
+                Files.createDirectories(Paths.get(informaticaObject.directory));
 
-                String objectDirectory = outputDirectory + File.separator + objectFolder + File.separator + objectType;
-                if (!objectSubType.equals("none")) {
-                    objectDirectory += File.separator + objectSubType;
-                }
-
-                String objectFile = objectDirectory + File.separator + objectName + ".xml";
-
-                Files.createDirectories(Paths.get(objectDirectory));
-
-                int returnCodeObjectExport = runCommand(getObjectExportCommand(objectFolder, objectName, objectType, objectSubType, objectFile));
+                int returnCodeObjectExport = runCommand(informaticaObject.getObjectExportCommand());
                 if (replaceValues) {
-                    replaceValues(objectFile);
+                    replaceValues(informaticaObject.file);
                 }
-                writeToConsole((returnCodeObjectExport == 0 ? "SUCCESS" : "FAILED") + ". " + "Exported object " + currentObjectNumber + ": " + objectFolder + ", " + objectType + ", " + objectSubType + ", " + objectName + ". ");
+                writeToConsole((returnCodeObjectExport == 0 ? "SUCCESS" : "FAILED") + ". " + "Exported object " + currentObjectNumber + ": " +
+                        informaticaObject.folder + ", " +
+                        informaticaObject.type + ", " +
+                        informaticaObject.subType + ", " +
+                        informaticaObject.name + ". ");
                 currentObjectNumber++;
 
             }
@@ -110,24 +145,6 @@ public class Main {
         Files.delete(file.toPath());
         logfileWriter.close();
 
-    }
-
-    private static List<String> getObjectExportCommand(String objectFolder, String objectName, String objectType, String objectSubType, String objectFile) {
-        List<String> objectExportCommand = new ArrayList<>();
-        objectExportCommand.add(PMREP_COMMAND);
-        objectExportCommand.add(PMREP_OBJECTEXPORT_COMMAND);
-        objectExportCommand.add("-n");
-        objectExportCommand.add(objectName);
-        objectExportCommand.add("-o");
-        objectExportCommand.add(objectType);
-        objectExportCommand.add("-t");
-        objectExportCommand.add(objectSubType);
-        objectExportCommand.add("-f");
-        objectExportCommand.add(objectFolder);
-        objectExportCommand.add("-b");
-        objectExportCommand.add("-u");
-        objectExportCommand.add(objectFile);
-        return objectExportCommand;
     }
 
     private static List<String> getExecutequeryCommand() {
