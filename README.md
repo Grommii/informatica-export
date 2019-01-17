@@ -53,7 +53,7 @@ The list of replaced values:
 - <port_number>  - Required. Gateway port number.
 - <user_name> - Required. User name used to connect to the repository.
 - <user_security_domain>  - Optional. Name of the security domain that the user belongs to. Default is "Native".
-- <password> - Required if using connection by plain password. User password.
+- < password> - Required if using connection by plain password. User password.
 - <password_environment_variable> - Required if using connection by password variable. User password environment variable.
 - <query_name> - Required. Informatica query name.
 - <commands_directory> - Required. Directory of Informatica commands. Note: don't use CommandLineUtilities folder, use \client\bin instead.

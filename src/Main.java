@@ -51,36 +51,8 @@ public class Main {
 
         logfileWriter = new BufferedWriter(new FileWriter(logFile));
 
-        List<String> connectCommand = new ArrayList<>();
-        connectCommand.add(pmrepCommand);
-        connectCommand.add(pmrepConnectCommand);
-        connectCommand.add("-r");
-        connectCommand.add(repositoryName);
-        if (repositoryDomainName != null){
-            connectCommand.add("-d");
-            connectCommand.add(repositoryDomainName);
-        } else {
-            connectCommand.add("-h");
-            connectCommand.add(repositoryHostname);
-            connectCommand.add("-o");
-            connectCommand.add(repositoryPort);
-        }
-        connectCommand.add("-n");
-        connectCommand.add(repositoryUsername);
-        if (repositorySecurityDomain != null){
-            connectCommand.add("-s");
-            connectCommand.add(repositorySecurityDomain);
-        }
-        if (repositoryPassword != null){
-            connectCommand.add("-x");
-            connectCommand.add(repositoryPassword);
-        } else {
-            connectCommand.add("-X");
-            connectCommand.add(repositoryPasswordEnv);
-        }
-
         writeToConsole("Connecting to Repository.");
-        int returnCodeConnect = runCommand(connectCommand);
+        int returnCodeConnect = runCommand(getConnectCommand());
         if (returnCodeConnect != 0){
             writeToConsole("Connection failed. Exit code: " + returnCodeConnect + ". Please check log: " + logFile);
             logfileWriter.close();
@@ -89,17 +61,8 @@ public class Main {
             writeToConsole("Connection successful.");
         }
 
-
-        List<String> executequeryCommand = new ArrayList<>();
-        executequeryCommand.add(pmrepCommand);
-        executequeryCommand.add(pmrepExecutequeryCommand);
-        executequeryCommand.add("-q");
-        executequeryCommand.add(repositoryQueryName);
-        executequeryCommand.add("-u");
-        executequeryCommand.add(outputDirectory + File.separator + objectsListFileName);
-
         writeToConsole("Getting the list of objects to export.");
-        int returnCodeExecutequery = runCommand(executequeryCommand);
+        int returnCodeExecutequery = runCommand(getExecutequeryCommand());
         if (returnCodeExecutequery != 0){
             writeToConsole("Executequery command failed. Exit code: " + returnCodeExecutequery + ". Please check log: " + logFile);
             logfileWriter.close();
@@ -130,25 +93,13 @@ public class Main {
                     objectDirectory += File.separator + objectSubType;
                 }
 
+                String objectFile = objectDirectory + File.separator + objectName + ".xml";
+
                 Files.createDirectories(Paths.get(objectDirectory));
 
-                List<String> objectExportCommand = new ArrayList<>();
-                objectExportCommand.add(pmrepCommand);
-                objectExportCommand.add(pmrepObjectexportCommand);
-                objectExportCommand.add("-n");
-                objectExportCommand.add(objectName);
-                objectExportCommand.add("-o");
-                objectExportCommand.add(objectType);
-                objectExportCommand.add("-t");
-                objectExportCommand.add(objectSubType);
-                objectExportCommand.add("-f");
-                objectExportCommand.add(objectFolder);
-                objectExportCommand.add("-b");
-                objectExportCommand.add("-u");
-                objectExportCommand.add(objectDirectory + File.separator + objectName + ".xml");
-                int returnCodeObjectExport = runCommand(objectExportCommand);
+                int returnCodeObjectExport = runCommand(getObjectExportCommand(objectFolder, objectName, objectType, objectSubType, objectFile));
                 if (replaceValues) {
-                    replaceValues(objectDirectory + File.separator + objectName + ".xml");
+                    replaceValues(objectFile);
                 }
                 writeToConsole("Exporting object " + currentObjectNumber + ": " + objectFolder + ", " + objectType + ", " + objectSubType + ", " + objectName + ". " + (returnCodeObjectExport == 0 ? "SUCCESS" : "FAILED"));
                 currentObjectNumber++;
@@ -158,6 +109,66 @@ public class Main {
         Files.delete(file.toPath());
         logfileWriter.close();
 
+    }
+
+    private static List<String> getObjectExportCommand(String objectFolder, String objectName, String objectType, String objectSubType, String objectFile) {
+        List<String> objectExportCommand = new ArrayList<>();
+        objectExportCommand.add(pmrepCommand);
+        objectExportCommand.add(pmrepObjectexportCommand);
+        objectExportCommand.add("-n");
+        objectExportCommand.add(objectName);
+        objectExportCommand.add("-o");
+        objectExportCommand.add(objectType);
+        objectExportCommand.add("-t");
+        objectExportCommand.add(objectSubType);
+        objectExportCommand.add("-f");
+        objectExportCommand.add(objectFolder);
+        objectExportCommand.add("-b");
+        objectExportCommand.add("-u");
+        objectExportCommand.add(objectFile);
+        return objectExportCommand;
+    }
+
+    private static List<String> getExecutequeryCommand() {
+        List<String> executequeryCommand = new ArrayList<>();
+        executequeryCommand.add(pmrepCommand);
+        executequeryCommand.add(pmrepExecutequeryCommand);
+        executequeryCommand.add("-q");
+        executequeryCommand.add(repositoryQueryName);
+        executequeryCommand.add("-u");
+        executequeryCommand.add(outputDirectory + File.separator + objectsListFileName);
+        return executequeryCommand;
+    }
+
+    private static List<String> getConnectCommand() {
+        List<String> connectCommand = new ArrayList<>();
+        connectCommand.add(pmrepCommand);
+        connectCommand.add(pmrepConnectCommand);
+        connectCommand.add("-r");
+        connectCommand.add(repositoryName);
+        if (repositoryDomainName != null){
+            connectCommand.add("-d");
+            connectCommand.add(repositoryDomainName);
+        } else {
+            connectCommand.add("-h");
+            connectCommand.add(repositoryHostname);
+            connectCommand.add("-o");
+            connectCommand.add(repositoryPort);
+        }
+        connectCommand.add("-n");
+        connectCommand.add(repositoryUsername);
+        if (repositorySecurityDomain != null){
+            connectCommand.add("-s");
+            connectCommand.add(repositorySecurityDomain);
+        }
+        if (repositoryPassword != null){
+            connectCommand.add("-x");
+            connectCommand.add(repositoryPassword);
+        } else {
+            connectCommand.add("-X");
+            connectCommand.add(repositoryPasswordEnv);
+        }
+        return connectCommand;
     }
 
     private static void replaceValues(String filename) throws IOException{
@@ -189,7 +200,7 @@ public class Main {
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        int exitVal = process.waitFor();
+        int exitValue = process.waitFor();
         while (bufferedReader.ready()){
             String line = bufferedReader.readLine();
             logfileWriter.write(line);
@@ -199,7 +210,7 @@ public class Main {
         logfileWriter.newLine();
         logfileWriter.newLine();
         bufferedReader.close();
-        return exitVal;
+        return exitValue;
     }
 
     private static void writeToConsole(String s){
